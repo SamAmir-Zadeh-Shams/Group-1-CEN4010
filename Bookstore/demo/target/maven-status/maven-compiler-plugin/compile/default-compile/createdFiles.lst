@@ -1,0 +1,7 @@
+com\bookstore\BookstoreApplication.class
+com\bookstore\controller\WishlistController.class
+com\bookstore\entity\Wishlist.class
+com\bookstore\repository\WishlistRepository.class
+com\bookstore\entity\Book.class
+com\bookstore\repository\BookRepository.class
+com\bookstore\service\WishlistService.class
