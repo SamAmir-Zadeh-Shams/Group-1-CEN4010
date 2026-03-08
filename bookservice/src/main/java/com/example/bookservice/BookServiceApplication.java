@@ -1,24 +1,11 @@
-
-package com.example.bookservice;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Scanner;
 
-@SpringBootApplication
-@RestController
-@RequestMapping("/api")
-public class BookServiceApplication {
+public class Main {
 
-    public static void main(String[] args) {
-        SpringApplication.run(BookServiceApplication.class, args);
-    }
-
+    // ================= Rating Class =================
     static class Rating {
         private int rating;
         private String userId;
@@ -38,6 +25,7 @@ public class BookServiceApplication {
         public LocalDateTime getDateStamp() { return dateStamp; }
     }
 
+    // ================= Comment Class =================
     static class Comment {
         private String comment;
         private String userId;
@@ -57,54 +45,126 @@ public class BookServiceApplication {
         public LocalDateTime getDateStamp() { return dateStamp; }
     }
 
-    private final List<Rating> ratings = new ArrayList<>();
-    private final List<Comment> comments = new ArrayList<>();
+    // ================= Storage =================
+    static List<Rating> ratings = new ArrayList<>();
+    static List<Comment> comments = new ArrayList<>();
 
-    @PostMapping("/ratings")
-    public void createRating(
-            @RequestParam int rating,
-            @RequestParam String userId,
-            @RequestParam String bookId) {
+    // ================= Create Rating =================
+    public static void createRating(int rating, String userId, String bookId) {
 
         if (rating < 1 || rating > 5) {
-            throw new IllegalArgumentException("Rating must be between 1 and 5 stars.");
+            System.out.println("Rating must be between 1 and 5.");
+            return;
         }
 
         ratings.add(new Rating(rating, userId, bookId));
+        System.out.println("Rating added successfully.");
     }
 
-    @PostMapping("/comments")
-    public void createComment(
-            @RequestParam String comment,
-            @RequestParam String userId,
-            @RequestParam String bookId) {
+    // ================= Create Comment =================
+    public static void createComment(String comment, String userId, String bookId) {
 
         comments.add(new Comment(comment, userId, bookId));
+        System.out.println("Comment added successfully.");
     }
 
-    @GetMapping("/comments")
-    public List<Comment> getComments(@RequestParam String bookId) {
+    // ================= Retrieve Comments =================
+    public static void getComments(String bookId) {
 
-        return comments.stream()
-                .filter(c -> c.getBookId().equalsIgnoreCase(bookId))
-                .collect(Collectors.toList());
+        System.out.println("\nComments for Book " + bookId + ":");
+
+        for (Comment c : comments) {
+            if (c.getBookId().equalsIgnoreCase(bookId)) {
+                System.out.println(c.getComment() + " by " + c.getUserId() + " at " + c.getDateStamp());
+            }
+        }
     }
 
-    @GetMapping("/ratings/average")
-    public double getAverageRating(@RequestParam String bookId) {
+    // ================= Average Rating =================
+    public static double getAverageRating(String bookId) {
 
-        List<Rating> bookRatings = ratings.stream()
-                .filter(r -> r.getBookId().equalsIgnoreCase(bookId))
-                .collect(Collectors.toList());
+        int sum = 0;
+        int count = 0;
 
-        if (bookRatings.isEmpty()) {
-            return 0.0;
+        for (Rating r : ratings) {
+            if (r.getBookId().equalsIgnoreCase(bookId)) {
+                sum += r.getRating();
+                count++;
+            }
         }
 
-        double sum = bookRatings.stream()
-                .mapToInt(Rating::getRating)
-                .sum();
+        if (count == 0) return 0.0;
 
-        return sum / bookRatings.size();
+        return (double) sum / count;
+    }
+
+    // ================= Main Menu =================
+    public static void main(String[] args) {
+
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+
+            System.out.println("\n--- Book Service Menu ---");
+            System.out.println("1. Add Rating");
+            System.out.println("2. Add Comment");
+            System.out.println("3. View Comments");
+            System.out.println("4. View Average Rating");
+            System.out.println("5. Exit");
+
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            if (choice == 1) {
+
+                System.out.print("User ID: ");
+                String user = scanner.nextLine();
+
+                System.out.print("Book ID: ");
+                String book = scanner.nextLine();
+
+                System.out.print("Rating (1-5): ");
+                int rating = scanner.nextInt();
+
+                createRating(rating, user, book);
+            }
+
+            else if (choice == 2) {
+
+                System.out.print("User ID: ");
+                String user = scanner.nextLine();
+
+                System.out.print("Book ID: ");
+                String book = scanner.nextLine();
+
+                System.out.print("Comment: ");
+                String comment = scanner.nextLine();
+
+                createComment(comment, user, book);
+            }
+
+            else if (choice == 3) {
+
+                System.out.print("Book ID: ");
+                String book = scanner.nextLine();
+
+                getComments(book);
+            }
+
+            else if (choice == 4) {
+
+                System.out.print("Book ID: ");
+                String book = scanner.nextLine();
+
+                double avg = getAverageRating(book);
+                System.out.println("Average Rating: " + avg);
+            }
+
+            else if (choice == 5) {
+                break;
+            }
+        }
+
+        scanner.close();
     }
 }
