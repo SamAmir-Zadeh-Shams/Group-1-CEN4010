@@ -20,8 +20,6 @@ public class BookService {
         books.add(new Book("The Hobbit", "J.R.R. Tolkien",
                 "Fantasy", 4.7, 4000000, 15.0, "Houghton"));
 
-        books.add(new Book("1984", "George Orwell",
-                "Dystopian", 4.6, 3000000, 12.0, "Penguin"));
     }
 
     public List<Book> getBooksByGenre(String genre) {
