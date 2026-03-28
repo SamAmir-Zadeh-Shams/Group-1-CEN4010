@@ -1,9 +1,13 @@
 package com.bookstore.service;
 
-import org.springframework.stereotype.Service;
-import com.bookstore.entity.*;
-import com.bookstore.repository.*;
 import java.util.Set;
+
+import org.springframework.stereotype.Service;
+
+import com.bookstore.entity.Book;
+import com.bookstore.entity.Wishlist;
+import com.bookstore.repository.BookRepository;
+import com.bookstore.repository.WishlistRepository;
 
 @Service
 public class WishlistService {
@@ -30,7 +34,22 @@ public class WishlistService {
         wishlistRepository.save(w);
     }
 
+    public void removeBook(Integer wishlistId, Integer bookId) {
+    Wishlist w = wishlistRepository.findById(wishlistId)
+        .orElseThrow(() -> new RuntimeException("Wishlist not found"));
+
+    Book b = bookRepository.findById(bookId)
+        .orElseThrow(() -> new RuntimeException("Book not found"));
+
+    w.getBooks().remove(b);
+    wishlistRepository.save(w);
+}
+
     public Set<Book> getBooks(Integer wishlistId) {
         return wishlistRepository.findById(wishlistId).orElseThrow().getBooks();
+    }
+
+    public void deleteWishlist(int id) {
+    wishlistRepository.deleteById(id);
     }
 }
