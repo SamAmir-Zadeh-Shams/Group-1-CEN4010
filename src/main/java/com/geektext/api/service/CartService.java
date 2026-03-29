@@ -1,3 +1,4 @@
+// Sprint 2: Shopping cart service - database entities and GET endpoints
 package com.geektext.api.service;
 
 import com.geektext.api.model.Cart;
