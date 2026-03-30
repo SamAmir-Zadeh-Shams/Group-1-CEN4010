@@ -1,11 +1,11 @@
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Scanner;
 
 public class Main {
 
-    // ================= Rating Class =================
+    // ---------- Rating Class ----------
     static class Rating {
         private int rating;
         private String userId;
@@ -25,7 +25,7 @@ public class Main {
         public LocalDateTime getDateStamp() { return dateStamp; }
     }
 
-    // ================= Comment Class =================
+    // ---------- Comment Class ----------
     static class Comment {
         private String comment;
         private String userId;
@@ -45,42 +45,62 @@ public class Main {
         public LocalDateTime getDateStamp() { return dateStamp; }
     }
 
-    // ================= Storage =================
+    // ---------- Storage ----------
     static List<Rating> ratings = new ArrayList<>();
     static List<Comment> comments = new ArrayList<>();
 
-    // ================= Create Rating =================
+
+    // ---------- POST /ratings ----------
     public static void createRating(int rating, String userId, String bookId) {
 
         if (rating < 1 || rating > 5) {
-            System.out.println("Rating must be between 1 and 5.");
+            System.out.println("Error: Rating must be between 1 and 5.");
             return;
         }
 
         ratings.add(new Rating(rating, userId, bookId));
-        System.out.println("Rating added successfully.");
+        System.out.println("POST /ratings → Rating created");
     }
 
-    // ================= Create Comment =================
+
+    // ---------- POST /comments ----------
     public static void createComment(String comment, String userId, String bookId) {
 
         comments.add(new Comment(comment, userId, bookId));
-        System.out.println("Comment added successfully.");
+        System.out.println("POST /comments → Comment created");
     }
 
-    // ================= Retrieve Comments =================
+
+    // ---------- GET /comments (with sorting) ----------
     public static void getComments(String bookId) {
 
-        System.out.println("\nComments for Book " + bookId + ":");
+        System.out.println("\nGET /comments?bookId=" + bookId + " (sorted by newest)");
 
-        for (Comment c : comments) {
-            if (c.getBookId().equalsIgnoreCase(bookId)) {
-                System.out.println(c.getComment() + " by " + c.getUserId() + " at " + c.getDateStamp());
-            }
-        }
+        comments.stream()
+                .filter(c -> c.getBookId().equalsIgnoreCase(bookId))
+                .sorted(Comparator.comparing(Comment::getDateStamp).reversed())
+                .forEach(c -> System.out.println(
+                        c.getComment() + " by " + c.getUserId() + " at " + c.getDateStamp()
+                ));
     }
 
-    // ================= Average Rating =================
+
+    // ---------- GET /comments?bookId=&userId= (filter by user) ----------
+    public static void getCommentsByUser(String bookId, String userId) {
+
+        System.out.println("\nGET /comments?bookId=" + bookId + "&userId=" + userId);
+
+        comments.stream()
+                .filter(c -> c.getBookId().equalsIgnoreCase(bookId))
+                .filter(c -> c.getUserId().equalsIgnoreCase(userId))
+                .sorted(Comparator.comparing(Comment::getDateStamp).reversed())
+                .forEach(c -> System.out.println(
+                        c.getComment() + " at " + c.getDateStamp()
+                ));
+    }
+
+
+    // ---------- GET /ratings/average ----------
     public static double getAverageRating(String bookId) {
 
         int sum = 0;
@@ -98,73 +118,26 @@ public class Main {
         return (double) sum / count;
     }
 
-    // ================= Main Menu =================
+
+    // ---------- Main (Testing) ----------
     public static void main(String[] args) {
 
-        Scanner scanner = new Scanner(System.in);
+        // Simulated POST requests
+        createRating(5, "U1", "B1");
+        createRating(4, "U2", "B1");
+        createRating(3, "U1", "B1");
 
-        while (true) {
+        createComment("Great book!", "U1", "B1");
+        createComment("Very helpful.", "U2", "B1");
+        createComment("Loved it!", "U1", "B1");
 
-            System.out.println("\n--- Book Service Menu ---");
-            System.out.println("1. Add Rating");
-            System.out.println("2. Add Comment");
-            System.out.println("3. View Comments");
-            System.out.println("4. View Average Rating");
-            System.out.println("5. Exit");
+        // Simulated GET requests
+        getComments("B1");
 
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+        getCommentsByUser("B1", "U1");
 
-            if (choice == 1) {
-
-                System.out.print("User ID: ");
-                String user = scanner.nextLine();
-
-                System.out.print("Book ID: ");
-                String book = scanner.nextLine();
-
-                System.out.print("Rating (1-5): ");
-                int rating = scanner.nextInt();
-
-                createRating(rating, user, book);
-            }
-
-            else if (choice == 2) {
-
-                System.out.print("User ID: ");
-                String user = scanner.nextLine();
-
-                System.out.print("Book ID: ");
-                String book = scanner.nextLine();
-
-                System.out.print("Comment: ");
-                String comment = scanner.nextLine();
-
-                createComment(comment, user, book);
-            }
-
-            else if (choice == 3) {
-
-                System.out.print("Book ID: ");
-                String book = scanner.nextLine();
-
-                getComments(book);
-            }
-
-            else if (choice == 4) {
-
-                System.out.print("Book ID: ");
-                String book = scanner.nextLine();
-
-                double avg = getAverageRating(book);
-                System.out.println("Average Rating: " + avg);
-            }
-
-            else if (choice == 5) {
-                break;
-            }
-        }
-
-        scanner.close();
+        double avg = getAverageRating("B1");
+        System.out.println("\nGET /ratings/average?bookId=B1");
+        System.out.println("Average Rating: " + avg);
     }
 }
