@@ -2,15 +2,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Scanner;
 
 public class Main {
 
     // ---------- Rating Class ----------
     static class Rating {
-        private int rating;
-        private String userId;
-        private String bookId;
-        private LocalDateTime dateStamp;
+        private final int rating;
+        private final String userId;
+        private final String bookId;
+        private final LocalDateTime dateStamp;
 
         public Rating(int rating, String userId, String bookId) {
             this.rating = rating;
@@ -27,10 +28,10 @@ public class Main {
 
     // ---------- Comment Class ----------
     static class Comment {
-        private String comment;
-        private String userId;
-        private String bookId;
-        private LocalDateTime dateStamp;
+        private final String comment;
+        private final String userId;
+        private final String bookId;
+        private final LocalDateTime dateStamp;
 
         public Comment(String comment, String userId, String bookId) {
             this.comment = comment;
@@ -49,9 +50,12 @@ public class Main {
     static List<Rating> ratings = new ArrayList<>();
     static List<Comment> comments = new ArrayList<>();
 
-
     // ---------- POST /ratings ----------
     public static void createRating(int rating, String userId, String bookId) {
+        if (userId.isEmpty() || bookId.isEmpty()) {
+            System.out.println("Error: User ID and Book ID cannot be empty.");
+            return;
+        }
 
         if (rating < 1 || rating > 5) {
             System.out.println("Error: Rating must be between 1 and 5.");
@@ -59,50 +63,74 @@ public class Main {
         }
 
         ratings.add(new Rating(rating, userId, bookId));
-        System.out.println("POST /ratings → Rating created");
+        System.out.println("PASS: Rating created successfully.");
     }
-
 
     // ---------- POST /comments ----------
     public static void createComment(String comment, String userId, String bookId) {
+        if (comment.isEmpty() || userId.isEmpty() || bookId.isEmpty()) {
+            System.out.println("Error: Comment, User ID, and Book ID cannot be empty.");
+            return;
+        }
 
         comments.add(new Comment(comment, userId, bookId));
-        System.out.println("POST /comments → Comment created");
+        System.out.println("PASS: Comment created successfully.");
     }
 
-
-    // ---------- GET /comments (with sorting) ----------
+    // ---------- GET /comments ----------
     public static void getComments(String bookId) {
+        System.out.println("\nGET /comments?bookId=" + bookId);
 
-        System.out.println("\nGET /comments?bookId=" + bookId + " (sorted by newest)");
+        boolean found = false;
 
         comments.stream()
                 .filter(c -> c.getBookId().equalsIgnoreCase(bookId))
                 .sorted(Comparator.comparing(Comment::getDateStamp).reversed())
-                .forEach(c -> System.out.println(
-                        c.getComment() + " by " + c.getUserId() + " at " + c.getDateStamp()
-                ));
+                .forEach(c -> {
+                    System.out.println(c.getComment() + " by " + c.getUserId() + " at " + c.getDateStamp());
+                });
+
+        for (Comment c : comments) {
+            if (c.getBookId().equalsIgnoreCase(bookId)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            System.out.println("No comments found for this book.");
+        }
     }
 
-
-    // ---------- GET /comments?bookId=&userId= (filter by user) ----------
+    // ---------- GET /comments?bookId=&userId= ----------
     public static void getCommentsByUser(String bookId, String userId) {
-
         System.out.println("\nGET /comments?bookId=" + bookId + "&userId=" + userId);
+
+        boolean found = false;
 
         comments.stream()
                 .filter(c -> c.getBookId().equalsIgnoreCase(bookId))
                 .filter(c -> c.getUserId().equalsIgnoreCase(userId))
                 .sorted(Comparator.comparing(Comment::getDateStamp).reversed())
-                .forEach(c -> System.out.println(
-                        c.getComment() + " at " + c.getDateStamp()
-                ));
-    }
+                .forEach(c -> {
+                    System.out.println(c.getComment() + " at " + c.getDateStamp());
+                });
 
+        for (Comment c : comments) {
+            if (c.getBookId().equalsIgnoreCase(bookId) &&
+                c.getUserId().equalsIgnoreCase(userId)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            System.out.println("No comments found for this user and book.");
+        }
+    }
 
     // ---------- GET /ratings/average ----------
     public static double getAverageRating(String bookId) {
-
         int sum = 0;
         int count = 0;
 
@@ -113,31 +141,97 @@ public class Main {
             }
         }
 
-        if (count == 0) return 0.0;
+        if (count == 0) {
+            System.out.println("No ratings found for this book.");
+            return 0.0;
+        }
 
         return (double) sum / count;
     }
 
-
-    // ---------- Main (Testing) ----------
+    // ---------- INTERACTIVE MAIN ----------
     public static void main(String[] args) {
 
-        // Simulated POST requests
-        createRating(5, "U1", "B1");
-        createRating(4, "U2", "B1");
-        createRating(3, "U1", "B1");
+        Scanner scanner = new Scanner(System.in);
+        boolean running = true;
 
-        createComment("Great book!", "U1", "B1");
-        createComment("Very helpful.", "U2", "B1");
-        createComment("Loved it!", "U1", "B1");
+        System.out.println("=== BOOK SYSTEM ===");
 
-        // Simulated GET requests
-        getComments("B1");
+        while (running) {
+            System.out.println("\n1. Add Rating");
+            System.out.println("2. Add Comment");
+            System.out.println("3. View Comments (Book)");
+            System.out.println("4. View Comments (Book + User)");
+            System.out.println("5. Get Average Rating");
+            System.out.println("6. Exit");
+            System.out.print("Choose: ");
 
-        getCommentsByUser("B1", "U1");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
 
-        double avg = getAverageRating("B1");
-        System.out.println("\nGET /ratings/average?bookId=B1");
-        System.out.println("Average Rating: " + avg);
+            switch (choice) {
+
+                case 1:
+                    System.out.print("Rating (1-5): ");
+                    int rating = scanner.nextInt();
+                    scanner.nextLine();
+
+                    System.out.print("User ID: ");
+                    String userId = scanner.nextLine();
+
+                    System.out.print("Book ID: ");
+                    String bookId = scanner.nextLine();
+
+                    createRating(rating, userId, bookId);
+                    break;
+
+                case 2:
+                    System.out.print("Comment: ");
+                    String comment = scanner.nextLine();
+
+                    System.out.print("User ID: ");
+                    userId = scanner.nextLine();
+
+                    System.out.print("Book ID: ");
+                    bookId = scanner.nextLine();
+
+                    createComment(comment, userId, bookId);
+                    break;
+
+                case 3:
+                    System.out.print("Book ID: ");
+                    bookId = scanner.nextLine();
+                    getComments(bookId);
+                    break;
+
+                case 4:
+                    System.out.print("Book ID: ");
+                    bookId = scanner.nextLine();
+
+                    System.out.print("User ID: ");
+                    userId = scanner.nextLine();
+
+                    getCommentsByUser(bookId, userId);
+                    break;
+
+                case 5:
+                    System.out.print("Book ID: ");
+                    bookId = scanner.nextLine();
+
+                    double avg = getAverageRating(bookId);
+                    System.out.println("Average Rating: " + avg);
+                    break;
+
+                case 6:
+                    running = false;
+                    System.out.println("Goodbye!");
+                    break;
+
+                default:
+                    System.out.println("Invalid option.");
+            }
+        }
+
+        scanner.close();
     }
 }
