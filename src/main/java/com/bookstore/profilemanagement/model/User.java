@@ -1,5 +1,6 @@
 package com.bookstore.profilemanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,14 +18,14 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
     private String email;
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private String location;
     private String dept;
     @Column(name = "is_admin")
     private boolean isAdmin;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public User() {}
